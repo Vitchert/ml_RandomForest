@@ -46,7 +46,7 @@ struct TDecisionTree {
 		TDecisionTree desicionTree;
 		desicionTree.tree.resize(treeSize);
 
-		for (size_t nodeIdx = 0; nodeIdx < treeSize; ++treeSize) {
+		for (size_t nodeIdx = 0; nodeIdx < treeSize; ++nodeIdx) {
 			treeIn >> desicionTree.tree[nodeIdx].weight >> desicionTree.tree[nodeIdx].featureIndex >> desicionTree.tree[nodeIdx].threshold >> desicionTree.tree[nodeIdx].classIndex >> desicionTree.tree[nodeIdx].leftChildIndex >> desicionTree.tree[nodeIdx].rightChildIndex;
 		}
 

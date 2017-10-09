@@ -35,7 +35,7 @@ struct TRForestModel{
 			exit(EXIT_FAILURE);
 		}
 		modelOut.precision(20);
-		modelOut << classTranslation.size() << "";
+		modelOut << classTranslation.size() << " ";
 
 		for (auto it = classTranslation.begin(); it != classTranslation.end(); ++it) {
 			modelOut << it->first << " " << it->second << " ";
@@ -66,7 +66,7 @@ struct TRForestModel{
 		modelIn >> forestSize;
 
 		for (int i = 0; i < forestSize; ++i) {
-			model.forest[i] = TDecisionTree::LoadFromFile(modelIn);
+			model.forest.push_back(TDecisionTree::LoadFromFile(modelIn));
 		}
 		return model;
 	};
