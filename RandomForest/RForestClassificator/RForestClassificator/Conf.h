@@ -15,6 +15,8 @@ struct conf {
 	bool shuffle_features = false;
 	int rounds = 1;
 	int folds = 2;
+	std::string randomType = "seed";
+	int seed = 1;
 	std::string featuresFilePath = "";
 
 	static int ParseArguments(conf& config, int argc,const char *argv[])
@@ -142,6 +144,29 @@ struct conf {
 					config.featureSubset = argv[i];
 					if (stricmp(argv[i], "float") == 0) {
 						if (++i >= argc || sscanf(argv[i], "%f", &config.featureSubsetVal) != 1)
+						{
+							printf("invalid parameter for %s\n", argv[i - 1]);
+							return 1;
+						}
+					}
+				}
+				else {
+					printf("invalid parameter for %s\n", argv[i - 1]);
+					return 1;
+				}
+			}
+
+			if (stricmp(argv[i], "-random") == 0)
+			{
+				if (++i >= argc)
+				{
+					printf("invalid parameter for %s\n", argv[i - 1]);
+					return 1;
+				}
+				if ((stricmp(argv[i], "seed") == 0) || (stricmp(argv[i], "time") == 0) ) {
+					config.randomType = argv[i];
+					if (stricmp(argv[i], "seed") == 0) {
+						if (++i >= argc || sscanf(argv[i], "%d", &config.seed) != 1)
 						{
 							printf("invalid parameter for %s\n", argv[i - 1]);
 							return 1;

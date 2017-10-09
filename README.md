@@ -2,6 +2,19 @@
 Simple RandomForest implementation written in C++.
 Inside it uses bagging, and calculates split points based on Gini impurity.
 
+Currently does not support categorial features, so you can try to use one-hot encoding instead.
+
+## Expected dataset format is:
+```bash
+<goal 1> <feature 1 1> <feature 1 2> .. <feature 1 M>
+.
+.
+<goal N> <feature N 1> <feature N 2> .. <feature N M>
+````
+
+`<goal i>` , `<feature i j>` - are expected to be int or float.
+    
+    
 ### Arguments example:
 ```bash
 RForestClassificator.exe -featuresPath "..\..\DataSets\np.txt" -mode cv 1 3 -treeCount 6 -threadCount 6 -oob -shuffle
@@ -80,3 +93,11 @@ RForestClassificator.exe -featuresPath "..\..\DataSets\np.txt" -mode cv 1 3 -tre
 2) `"sqrt"` : Use sqare all features from dataset.
 3) `"log"` : Use log of all features from dataset.
 4) `"float" <float>` : Use part of features equal to (dataset feature count)*`<float>`.  (0<`<float>`<= 1, default=1)
+
+#### Define random type.
+```bash
+-random <string>
+```
+##### possible values (default=`"seed" 1`): 
+1) `"time"` : Use time since epoch as random seed - udetermined random.
+2) `"seed" <int>` : Use `<int>` as random seed - determined random.

@@ -6,7 +6,6 @@
 #include <random>
 #include <algorithm>
 #include <map>
-
 #include "Conf.h"
 
 struct TInstance {

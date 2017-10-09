@@ -5,7 +5,6 @@
 #include <mutex>
 #include <condition_variable>
 #include <chrono> 
-#include "windows.h"
 
 class TRForestSolver {
 private:
@@ -55,8 +54,15 @@ public:
 			fIdx[i] = i;
 		}
 
-		unsigned seed = std::chrono::system_clock::now().time_since_epoch() /
-			std::chrono::milliseconds(1);
+		unsigned seed = 1;
+		if (config.randomType == "time") {
+			seed = std::chrono::system_clock::now().time_since_epoch() /
+				std::chrono::milliseconds(1);
+		}
+		else {
+			if (config.randomType == "seed")
+				seed = config.seed;
+		}
 		shuffle(fIdx.begin(), fIdx.end(), std::default_random_engine(seed+num));
 		if (config.featureSubset == "float") {
 			fIdx.resize((int)((double)fIdx.size() * config.featureSubsetVal));
@@ -108,13 +114,13 @@ public:
 				}
 				else {
 					sem.unlock();
-					Sleep(500);
+					std::this_thread::sleep_for(std::chrono::milliseconds(500));
 				}				
 			}			
 		}
 		while (true) {
 			std::cout << "wait...\n";
-			Sleep(3000);
+			std::this_thread::sleep_for(std::chrono::seconds(3));
 			g_lock.lock();
 			if (model.forest.size() == config.treeCount)
 				break;

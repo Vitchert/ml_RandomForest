@@ -19,6 +19,8 @@ struct TDecisionTree {
 	std::vector<TDecisionTreeNode> tree;
 	int numberFeatures;
 	bool eachNodeShuffle;
+	int seed = 1;
+	bool timeRandom = false;
 	template <typename T>
 	int Prediction(const std::vector<T>& features) const {
 		int idx = 0;
@@ -65,6 +67,13 @@ struct TDecisionTree {
 			numberFeatures = fIdx.size();
 		}
 		eachNodeShuffle = config.shuffle_features;
+		if (config.randomType == "time") {
+			timeRandom = true;
+		}
+		else {
+			if (config.randomType == "seed")
+				seed = config.seed;
+		}
 		ConstructTreeRecursion(dataset, dataIdx, classCount, dataIdxsize, fIdx);
 	}
 
@@ -120,11 +129,12 @@ struct TDecisionTree {
 
 	TBestSplit FindBestSplit(TDataset& dataset,const std::vector<char>& dataIdx, std::vector<int>& classCount,int dataIdxsize, std::vector<int>& fIdx) {
 		
-#ifdef EACH_NODE_SHUFFLE
-		unsigned seed = std::chrono::system_clock::now().time_since_epoch() /
-			std::chrono::milliseconds(1);
-		shuffle(fIdx.begin(), fIdx.end(), std::default_random_engine(seed));
-#endif
+		if (eachNodeShuffle) {
+			if (timeRandom) {
+				seed = std::chrono::system_clock::now().time_since_epoch() / std::chrono::milliseconds(1);
+			}
+			shuffle(fIdx.begin(), fIdx.end(), std::default_random_engine(seed));
+		}
 		TBestSplit bestSplit;
 		bestSplit.featureIdx = -1;
 		bestSplit.splitVal = 0;

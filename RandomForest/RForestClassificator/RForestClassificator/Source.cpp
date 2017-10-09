@@ -76,11 +76,10 @@ int main(int argc, const char** argv) {
 					testsize++;
 				}
 			}
-			std::cout << "SSE " << SSE << std::endl;
-			std::cout << SSE << std::endl;
+			std::cout << "CV round " << i <<" accuracy: " << SSE << std::endl;
 			SSEmean += (SSE - SSEmean) / (i + 1);
 		}
-		std::cout << std::endl << "Mean accuracy" << SSEmean << std::endl;
+		std::cout << std::endl << "Mean accuracy: " << SSEmean << std::endl;
 	}
 	return 0;
 }
