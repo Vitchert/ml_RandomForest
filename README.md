@@ -1,6 +1,7 @@
 # ml_RandomForest
 Simple RandomForest implementation written in C++.
-Inside it uses bagging, and calculates split points based on Gini impurity.
+
+Inside it creates binary trees, uses bagging, and calculates split points based on Gini impurity.
 
 Currently does not support categorial features, so you can try to use one-hot encoding instead.
 
@@ -12,8 +13,9 @@ Currently does not support categorial features, so you can try to use one-hot en
 <goal N> <feature N 1> <feature N 2> .. <feature N M>
 ````
 
-`<goal i>` , `<feature i j>` - are expected to be int or float.
+`<goal i>` , `<feature i j>` - are expected to be int or float, *string values are currently unsupported*.
     
+**_!!!Even in prediction mode the first column is expected to be goals!!!_**
     
 ### Arguments example:
 ```bash
