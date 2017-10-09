@@ -80,7 +80,7 @@ public:
 				if (cl != dataset.goals[idx])
 					++wrong;
 			}
-			std::cout << "OOB t" << num << " " << (double)wrong / dataIdx.size() << std::endl;
+			std::cout << "t" + std::to_string(num) + " OOB " + std::to_string((double)wrong / dataIdx.size()) + "\n";
 		}
 		sem.lock();
 		++semCount;
@@ -95,12 +95,13 @@ public:
 		dataset.PrepareGoals();
 
 		TRForestModel model;
-		std::cout << "Creating Trees: ";
+		std::cout << "Creating Trees:\n";
 		for (int i = 0; i < config.treeCount; ++i) {
 			while (true) {
 				sem.lock();
 				if (semCount > 0) {
 					--semCount;
+					std::cout << "t"+std::to_string(i)+"\n";
 					std::thread(&TRForestSolver::threadFunction, this, std::ref(model), i).detach();
 					sem.unlock();
 					break;
@@ -112,7 +113,7 @@ public:
 			}			
 		}
 		while (true) {
-			std::cout << "sleep\n";
+			std::cout << "wait...\n";
 			Sleep(3000);
 			g_lock.lock();
 			if (model.forest.size() == config.treeCount)
@@ -120,11 +121,10 @@ public:
 			g_lock.unlock();
 		}
 		g_lock.unlock();
-		if (config.mode == "learn") {
-			auto it = dataset.classes.begin();
-			while (it != dataset.classes.end()) {
-				model.classTranslation.insert({it->second,it->first});
-			}
+		auto it = dataset.classes.begin();
+		while (it != dataset.classes.end()) {
+			model.classTranslation.insert({it->second,it->first});
+			++it;
 		}
 		return model;
 	}

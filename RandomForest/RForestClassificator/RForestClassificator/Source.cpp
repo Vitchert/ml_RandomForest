@@ -80,7 +80,7 @@ int main(int argc, const char** argv) {
 			std::cout << SSE << std::endl;
 			SSEmean += (SSE - SSEmean) / (i + 1);
 		}
-		std::cout << std::endl << "Mean " << SSEmean << std::endl;
+		std::cout << std::endl << "Mean accuracy" << SSEmean << std::endl;
 	}
 	return 0;
 }
