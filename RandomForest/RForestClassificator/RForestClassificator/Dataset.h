@@ -123,7 +123,7 @@ struct TDataset {
 	void ReadFromFile(const std::string& featuresPath) {
 		std::ifstream featuresIn(featuresPath);
 		if (!featuresIn.is_open()) {
-			std::cout << "Cant open dataset file\n";
+			std::cout << "Cant open dataset file in path=\"" << featuresPath << "\" \n";
 			exit(EXIT_FAILURE);
 		}
 		std::string featuresString;

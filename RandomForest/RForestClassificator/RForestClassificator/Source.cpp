@@ -21,7 +21,7 @@ int main(int argc, const char** argv) {
 	else if (config.mode == "predict") {
 		std::ofstream predictionsOut(config.predictionPath);
 		if (!predictionsOut.is_open()) {
-			std::cout << "Cant create predictions file\n";
+			std::cout << "Cant create predictions file in path=\"" << config.predictionPath << "\" \n";
 			exit(EXIT_FAILURE);
 		}
 		predictionsOut.precision(20);

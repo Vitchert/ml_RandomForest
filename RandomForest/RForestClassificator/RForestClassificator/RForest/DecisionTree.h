@@ -10,7 +10,9 @@ struct TDecisionTreeNode {
 	int weight = 0;
 	int featureIndex = 0;
 	double threshold = 0;
+	double splitMetricValue = 0;
 	int classIndex = -1;
+	int objectCount = 0;
 	int leftChildIndex = -1;
 	int rightChildIndex = -1;
 };
@@ -33,7 +35,7 @@ struct TDecisionTree {
 		if (tree.size()) {
 			treeOut << tree.size() << " ";
 			for (TDecisionTreeNode node : tree) {
-				treeOut << node.weight << " " << node.featureIndex << " " << node.threshold << " " << node.classIndex << " " << node.leftChildIndex << " " << node.rightChildIndex << " ";
+				treeOut << node.weight << " " << node.featureIndex << " " << node.threshold << " " << node.splitMetricValue << " " << node.classIndex << " " << node.objectCount << " " << node.leftChildIndex << " " << node.rightChildIndex << " ";
 			}
 		}
 	}
@@ -47,7 +49,7 @@ struct TDecisionTree {
 		desicionTree.tree.resize(treeSize);
 
 		for (size_t nodeIdx = 0; nodeIdx < treeSize; ++nodeIdx) {
-			treeIn >> desicionTree.tree[nodeIdx].weight >> desicionTree.tree[nodeIdx].featureIndex >> desicionTree.tree[nodeIdx].threshold >> desicionTree.tree[nodeIdx].classIndex >> desicionTree.tree[nodeIdx].leftChildIndex >> desicionTree.tree[nodeIdx].rightChildIndex;
+			treeIn >> desicionTree.tree[nodeIdx].weight >> desicionTree.tree[nodeIdx].featureIndex >> desicionTree.tree[nodeIdx].threshold >> desicionTree.tree[nodeIdx].splitMetricValue >> desicionTree.tree[nodeIdx].classIndex >> desicionTree.tree[nodeIdx].objectCount >> desicionTree.tree[nodeIdx].leftChildIndex >> desicionTree.tree[nodeIdx].rightChildIndex;
 		}
 
 		return desicionTree;
@@ -79,9 +81,11 @@ struct TDecisionTree {
 
 	void ConstructTreeRecursion(TDataset& dataset, std::vector<char> dataIdx, std::vector<int> classCount, int dataIdxsize, std::vector<int> fIdx) {
 		TDecisionTreeNode node;
+		node.objectCount = dataIdxsize;
 		TBestSplit split = FindBestSplit(dataset, dataIdx, classCount, dataIdxsize, fIdx);
 		if (split.featureIdx < 0) {
 			node.classIndex = std::max_element(classCount.begin(), classCount.end()) - classCount.begin();
+			node.splitMetricValue = split.splitMetricVal;
 			tree.push_back(node);
 		}
 		else {
@@ -113,6 +117,7 @@ struct TDecisionTree {
 
 			node.featureIndex = split.featureIdx;
 			node.threshold = split.splitVal;
+			node.splitMetricValue = split.splitMetricVal;
 			tree.push_back(node);
 			int curpos = tree.size() - 1;
 			tree[curpos].leftChildIndex = tree.size();
@@ -125,6 +130,7 @@ struct TDecisionTree {
 	struct TBestSplit {
 		int featureIdx;
 		double splitVal;
+		double splitMetricVal;
 	};
 
 	TBestSplit FindBestSplit(TDataset& dataset,const std::vector<char>& dataIdx, std::vector<int>& classCount,int dataIdxsize, std::vector<int>& fIdx) {
@@ -138,12 +144,14 @@ struct TDecisionTree {
 		TBestSplit bestSplit;
 		bestSplit.featureIdx = -1;
 		bestSplit.splitVal = 0;
+		bestSplit.splitMetricVal = -1;
 
 		double minGini = 1;
 		int classSize = classCount.size();
 		int instanceCount = dataset.featuresMatrix.size();
 		for (int i = 0; i < classSize; ++i) 
 			minGini -= (double)(classCount[i] * classCount[i]) / (dataIdxsize*dataIdxsize);
+		bestSplit.splitMetricVal = minGini;
 
 		std::vector<int> leftClasses(classSize,0);
 		std::vector<int> rightClasses;
@@ -180,6 +188,7 @@ struct TDecisionTree {
 					minGini = Gini;
 					bestSplit.featureIdx = featureIdx;
 					bestSplit.splitVal = split;
+					bestSplit.splitMetricVal = minGini;
 					if ((!leftGini) || (!rightGini))
 						break;
 				}

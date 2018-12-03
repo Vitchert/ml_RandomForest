@@ -31,7 +31,7 @@ struct TRForestModel{
 	void SaveToFile(const std::string& modelPath) {
 		std::ofstream modelOut(modelPath);
 		if (!modelOut.is_open()) {
-			std::cout << "Cant create model file\n";
+			std::cout << "Cant create model file in path=\"" << modelPath<<"\" \n";
 			exit(EXIT_FAILURE);
 		}
 		modelOut.precision(20);
@@ -45,11 +45,12 @@ struct TRForestModel{
 		for (TDecisionTree tree : forest) {
 			tree.SaveToFile(modelOut);
 		}
+		modelOut.close();
 	}
 	static TRForestModel LoadFromFile(const std::string& modelPath) {
 		std::ifstream modelIn(modelPath);
 		if (!modelIn.is_open()) {
-			std::cout << "Cant open model file\n";
+			std::cout << "Cant open model file in path=\"" << modelPath << "\" \n";
 			exit(EXIT_FAILURE);
 		}
 		TRForestModel model;
@@ -68,6 +69,7 @@ struct TRForestModel{
 		for (int i = 0; i < forestSize; ++i) {
 			model.forest.push_back(TDecisionTree::LoadFromFile(modelIn));
 		}
+		modelIn.close();
 		return model;
 	};
 
