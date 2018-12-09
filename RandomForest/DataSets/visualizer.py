@@ -94,10 +94,10 @@ class Tree(object):
             g.edge('node'+str(cur_idx), 'node'+str(cur_node.rightChildIndex))
 
 
-    def print(self, max_limit):
-        g = Digraph('g', filename='btree.gv', node_attr={'shape': 'record', 'height': '.1'})
+    def prnt(self, idx, max_limit):
+        g = Digraph('g', filename='tree{}.gv'.format(idx), node_attr={'shape': 'record', 'height': '.1'})
         self.recursive_creation(g,0, 0, max_limit)
-        g.render('round-table.gv', view=True)
+        g.render('round-table{}.gv'.format(idx), view=True)
 
 
 def read_class_translation(list):
@@ -130,5 +130,5 @@ with open(args.model_path,'r') as f:
         tree, add_pos = Tree.from_list(model_list[pos:])
         pos += add_pos
         trees.append(tree)
-    trees[0].print(args.limit)
-    
+    for i in range(len(trees)):
+        trees[i].prnt(i, args.limit)

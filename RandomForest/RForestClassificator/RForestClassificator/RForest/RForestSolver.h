@@ -118,14 +118,16 @@ public:
 				}				
 			}			
 		}
+		int cnt = 0;
 		while (true) {
-			std::cout << "wait...\n";
-			std::this_thread::sleep_for(std::chrono::seconds(3));
+			std::cout << "wait "<< cnt++ <<" sec\r";
+			std::this_thread::sleep_for(std::chrono::seconds(1));
 			g_lock.lock();
 			if (model.forest.size() == config.treeCount)
 				break;
 			g_lock.unlock();
 		}
+		std::cout <<std::endl;
 		g_lock.unlock();
 		auto it = dataset.classes.begin();
 		while (it != dataset.classes.end()) {
