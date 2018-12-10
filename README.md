@@ -108,3 +108,16 @@ RForestClassificator.exe -featuresPath "..\..\DataSets\np.txt" -mode cv 1 3 -tre
 ##### possible values (default=`"seed" 1`): 
 1) `"time"` : Use time since epoch as random seed - udetermined random.
 2) `"seed" <int>` : Use `<int>` as random seed - determined random.
+
+# Visualisation:
+Python script visualiser.py
+
+Requires graphviz folder in the same catalog (see os.environ["PATH"] extension inside visualiser.py) https://graphviz.gitlab.io/_pages/Download/Download_windows.html
+
+Prints to pdf and opens created files of all trees in model.
+
+Launch example:
+```bash
+ python .\visualizer.py --model_path=".\model.txt" --limit=10
+````
+*parameter limit specifies depth of visualisation, if use see blank graph, try decreasing it.
