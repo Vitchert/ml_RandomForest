@@ -97,7 +97,7 @@ class Tree(object):
     def prnt(self, idx, max_limit):
         g = Digraph('g', filename='tree{}.gv'.format(idx), node_attr={'shape': 'record', 'height': '.1'})
         self.recursive_creation(g,0, 0, max_limit)
-        g.render('round-table{}.gv'.format(idx), view=True)
+        g.render('tree{}.gv'.format(idx), view=True)
 
 
 def read_class_translation(list):
