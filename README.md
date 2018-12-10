@@ -62,6 +62,11 @@ RForestClassificator.exe -featuresPath "..\..\DataSets\np.txt" -mode cv 1 3 -tre
 -treeCount <int, default=1>
 ```
 
+#### Max tree depth.
+```bash
+-depth <int, default=3>
+```
+
 #### Number of threads used when creating trees.
 ```bash
 -threadCount <int, default=1>
