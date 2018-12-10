@@ -28,8 +28,10 @@ public:
 	void threadFunction(TRForestModel& model, int num)
 	{
 		TDecisionTree dTree;
-		std::vector<char> dataIdx(dataset.goals.size(),0);
+		std::vector<int> dataIdx;
 		std::vector<int> testIdx;
+		dataIdx.reserve(dataset.goals.size());
+		testIdx.reserve(dataset.goals.size());
 		TDataset::TBaggingIterator it = dataset.BaggingIterator();
 		int datasize = 0;
 		std::vector<int> classCount(dataset.classCount.size(),0);
@@ -40,13 +42,15 @@ public:
 
 		for (int i = 0; i < size; ++i) {
 			if (it.InstanceFoldNumbers[i]) {
-				dataIdx[i] = 1;
+				dataIdx.push_back(i);
 				++classCount[dataset.goals[i]];
 				++datasize;
 			}
 			else
 				testIdx.push_back(i);
 		}
+		dataIdx.shrink_to_fit();
+		testIdx.shrink_to_fit();
 
 		int featureCount = dataset.featuresMatrix[0].size();
 		std::vector<int> fIdx(featureCount, 0);
@@ -86,7 +90,7 @@ public:
 				if (cl != dataset.goals[idx])
 					++wrong;
 			}
-			std::cout << "t" + std::to_string(num) + " OOB " + std::to_string((double)wrong / dataIdx.size()) + "\n";
+			std::cout << "t" + std::to_string(num) + " OOB " + std::to_string((double)wrong / testIdx.size()) + "\n";
 		}
 		sem.lock();
 		++semCount;

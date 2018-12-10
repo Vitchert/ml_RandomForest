@@ -18,6 +18,7 @@ struct conf {
 	std::string randomType = "seed";
 	int seed = 1;
 	std::string featuresFilePath = "";
+	int max_depth = 3;
 
 	static int ParseArguments(conf& config, int argc,const char *argv[])
 	{
@@ -110,7 +111,7 @@ struct conf {
 				config.shuffle_features = true;
 			}
 
-			if (stricmp(argv[i], "-maxNodeFeatures") == 0)
+			else if (stricmp(argv[i], "-maxNodeFeatures") == 0)
 			{
 				if (++i >= argc)
 				{
@@ -133,7 +134,7 @@ struct conf {
 				}
 			}
 
-			if (stricmp(argv[i], "-featureSubset") == 0)
+			else if (stricmp(argv[i], "-featureSubset") == 0)
 			{
 				if (++i >= argc)
 				{
@@ -156,7 +157,7 @@ struct conf {
 				}
 			}
 
-			if (stricmp(argv[i], "-random") == 0)
+			else if (stricmp(argv[i], "-random") == 0)
 			{
 				if (++i >= argc)
 				{
@@ -174,6 +175,15 @@ struct conf {
 					}
 				}
 				else {
+					printf("invalid parameter for %s\n", argv[i - 1]);
+					return 1;
+				}
+			}
+
+			else if (stricmp(argv[i], "-depth") == 0)
+			{
+				if (++i >= argc || sscanf(argv[i], "%d", &config.max_depth) != 1)
+				{
 					printf("invalid parameter for %s\n", argv[i - 1]);
 					return 1;
 				}

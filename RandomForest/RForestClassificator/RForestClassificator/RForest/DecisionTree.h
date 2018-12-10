@@ -4,6 +4,7 @@
 #include <numeric>
 #include <map>
 #include <chrono> 
+#include <stack>
 #include "Dataset.h"
 
 struct TDecisionTreeNode {
@@ -55,7 +56,7 @@ struct TDecisionTree {
 		return desicionTree;
 	};
 
-	void ConstructTree(TDataset& dataset, std::vector<char> dataIdx, std::vector<int> classCount,int dataIdxsize, std::vector<int> fIdx, conf config) {
+	void ConstructTree(TDataset& dataset, std::vector<int> dataIdx, std::vector<int> classCount,int dataIdxsize, std::vector<int> fIdx, conf config) {
 		if (config.maxNodeFeatures == "float") {
 			numberFeatures = (int)((double)fIdx.size() * config.maxNodeFeaturesVal);
 		}
@@ -76,55 +77,7 @@ struct TDecisionTree {
 			if (config.randomType == "seed")
 				seed = config.seed;
 		}
-		ConstructTreeRecursion(dataset, dataIdx, classCount, dataIdxsize, fIdx);
-	}
-
-	void ConstructTreeRecursion(TDataset& dataset, std::vector<char> dataIdx, std::vector<int> classCount, int dataIdxsize, std::vector<int> fIdx) {
-		TDecisionTreeNode node;
-		node.objectCount = dataIdxsize;
-		TBestSplit split = FindBestSplit(dataset, dataIdx, classCount, dataIdxsize, fIdx);
-		if (split.featureIdx < 0) {
-			node.classIndex = std::max_element(classCount.begin(), classCount.end()) - classCount.begin();
-			node.splitMetricValue = split.splitMetricVal;
-			tree.push_back(node);
-		}
-		else {
-			int dataPos = 0;
-			int size = dataset.goals.size();
-
-			std::vector<char> dataIdxLeft(dataIdx.size(), 0);
-			std::vector<char>& dataIdxRight = dataIdx;
-			std::vector<int> leftClassCount(classCount.size(), 0);
-			std::vector<int>& rightClassCount = classCount;
-			int leftDataSize = 0;
-			int rightDataSize = dataIdxsize;
-			while ((dataPos < size) && (dataIdx[dataset.sortedByIdxFeaturesMatrix[split.featureIdx][dataPos]] != 1)) {
-				++dataPos;
-			}
-			while ((dataPos < size) && (dataset.featuresMatrix[dataset.sortedByIdxFeaturesMatrix[split.featureIdx][dataPos]][split.featureIdx] < split.splitVal)) {
-				dataIdxRight[dataset.sortedByIdxFeaturesMatrix[split.featureIdx][dataPos]] = 0;
-				dataIdxLeft[dataset.sortedByIdxFeaturesMatrix[split.featureIdx][dataPos]] = 1;
-				--rightClassCount[dataset.goals[dataset.sortedByIdxFeaturesMatrix[split.featureIdx][dataPos]]];
-				++leftClassCount[dataset.goals[dataset.sortedByIdxFeaturesMatrix[split.featureIdx][dataPos]]];
-				--rightDataSize;
-				++leftDataSize;
-
-				++dataPos;
-				while ((dataPos < size) && (dataIdx[dataset.sortedByIdxFeaturesMatrix[split.featureIdx][dataPos]] != 1)) {
-					++dataPos;
-				}
-			}
-
-			node.featureIndex = split.featureIdx;
-			node.threshold = split.splitVal;
-			node.splitMetricValue = split.splitMetricVal;
-			tree.push_back(node);
-			int curpos = tree.size() - 1;
-			tree[curpos].leftChildIndex = tree.size();
-			ConstructTreeRecursion(dataset, dataIdxLeft, leftClassCount, leftDataSize, fIdx);
-			tree[curpos].rightChildIndex = tree.size();
-			ConstructTreeRecursion(dataset, dataIdxRight, rightClassCount, rightDataSize, fIdx);
-		}
+		ConstructTreeFunc(dataset, dataIdx, classCount, fIdx, config.max_depth);
 	}
 
 	struct TBestSplit {
@@ -133,8 +86,8 @@ struct TDecisionTree {
 		double splitMetricVal;
 	};
 
-	TBestSplit FindBestSplit(TDataset& dataset,const std::vector<char>& dataIdx, std::vector<int>& classCount,int dataIdxsize, std::vector<int>& fIdx) {
-		
+	TBestSplit FindBestSplit(TDataset& dataset, const std::vector<int>& dataIdx, std::vector<int>& classCount, std::vector<int>& fIdx) {
+		int dataIdxsize = dataIdx.size();
 		if (eachNodeShuffle) {
 			if (timeRandom) {
 				seed = std::chrono::system_clock::now().time_since_epoch() / std::chrono::milliseconds(1);
@@ -146,44 +99,39 @@ struct TDecisionTree {
 		bestSplit.splitVal = 0;
 		bestSplit.splitMetricVal = -1;
 
-		double minGini = 1;
 		int classSize = classCount.size();
 		int instanceCount = dataset.featuresMatrix.size();
-		for (int i = 0; i < classSize; ++i) 
-			minGini -= (double)(classCount[i] * classCount[i]) / (dataIdxsize*dataIdxsize);
+		double minGini = 1;
+		for (int i = 0; i < classSize; ++i)
+			minGini -= ((double)(classCount[i] * classCount[i])) / (dataIdxsize*dataIdxsize);
 		bestSplit.splitMetricVal = minGini;
 
-		std::vector<int> leftClasses(classSize,0);
+		std::vector<int> leftClasses(classSize, 0);
 		std::vector<int> rightClasses;
 		for (int fi = 0; fi < numberFeatures; ++fi) {
 			int featureIdx = fIdx[fi];
 			std::vector<double> splitpoints = dataset.splitPointsMatrix[featureIdx];
-			int dataPos = 0;
-			int leftsize = 0;
-			int rightsize = dataIdxsize;
-			rightClasses = classCount;
-			std::fill(leftClasses.begin(), leftClasses.end(),0);
-			while ((dataPos < instanceCount) && (dataIdx[dataset.sortedByIdxFeaturesMatrix[featureIdx][dataPos]] != 1))
-				++dataPos;
-
 			for (double split : splitpoints) {
-				while ((dataPos < instanceCount) && (dataset.featuresMatrix[dataset.sortedByIdxFeaturesMatrix[featureIdx][dataPos]][featureIdx] < split)) {
-					++leftsize;
-					--rightsize;
-					++leftClasses[dataset.goals[dataset.sortedByIdxFeaturesMatrix[featureIdx][dataPos]]];
-					--rightClasses[dataset.goals[dataset.sortedByIdxFeaturesMatrix[featureIdx][dataPos]]];
-					do {
-						++dataPos;
-					} while ((dataPos < instanceCount) && (dataIdx[dataset.sortedByIdxFeaturesMatrix[featureIdx][dataPos]] != 1));
+				int leftsize = 0;
+				int rightsize = dataIdxsize;
+				rightClasses = classCount;
+				std::fill(leftClasses.begin(), leftClasses.end(), 0);
+				for (int dataPos : dataIdx) {
+					if (dataset.featuresMatrix[dataPos][featureIdx] < split) {
+						++leftsize;
+						--rightsize;
+						++leftClasses[dataset.goals[dataPos]];
+						--rightClasses[dataset.goals[dataPos]];
+					}
 				}
 
 				double leftGini = 1;
 				double rightGini = 1;
 				for (int i = 0; i < classSize; ++i) {
-					leftGini -= (double)(leftClasses[i] * leftClasses[i]) / (leftsize*leftsize);
-					rightGini -= (double)(rightClasses[i] * rightClasses[i]) / (rightsize*rightsize);
+					leftGini -= ((double)(leftClasses[i] * leftClasses[i])) / (leftsize*leftsize);
+					rightGini -= ((double)(rightClasses[i] * rightClasses[i])) / (rightsize*rightsize);
 				}
-				double Gini = (leftGini + rightGini) / 2.;
+				double Gini = (leftsize*leftGini + rightsize * rightGini) / dataIdxsize;
 				if (Gini < minGini) {
 					minGini = Gini;
 					bestSplit.featureIdx = featureIdx;
@@ -196,5 +144,83 @@ struct TDecisionTree {
 		}
 		return bestSplit;
 	}
-	
+
+	void add_class_node(TBestSplit & split, std::vector<int>& dataIdx, std::vector<int>& classCount) {
+		TDecisionTreeNode node;
+		node.objectCount = dataIdx.size();
+		node.classIndex = std::max_element(classCount.begin(), classCount.end()) - classCount.begin();
+		node.splitMetricValue = split.splitMetricVal;
+		tree.push_back(node);
+	}
+
+	void ConstructTreeFunc(TDataset& dataset, std::vector<int> dataIdx, std::vector<int> classCount, std::vector<int> fIdx, int max_depth) {
+		std::stack<std::vector<int>> s_dataIdx;
+		std::stack<std::vector<int>> s_classCount;
+		std::stack<int> s_parentIdx;
+		std::stack<int> s_depth;
+		int cur_depth = 1;
+		do {		
+			TBestSplit split = FindBestSplit(dataset, dataIdx, classCount, fIdx);
+			if (split.featureIdx < 0 || cur_depth >= max_depth) {
+				add_class_node(split, dataIdx, classCount);
+				if (s_dataIdx.size() > 0) {
+					dataIdx = s_dataIdx.top();
+					classCount = s_classCount.top();
+					cur_depth = s_depth.top();
+					tree[s_parentIdx.top()].rightChildIndex = tree.size();
+					s_dataIdx.pop();
+					s_classCount.pop();
+					s_parentIdx.pop();
+					s_depth.pop();
+					continue;
+				}
+				else {
+					break;
+				}
+			}
+			else {
+				int dataPos = 0;
+				int size = dataset.goals.size();
+
+				std::vector<int> dataIdxLeft;
+				std::vector<int> dataIdxRight;
+				dataIdxLeft.reserve(dataIdx.size());
+				dataIdxRight.reserve(dataIdx.size());
+				std::vector<int> leftClassCount(classCount.size(), 0);
+				std::vector<int> rightClassCount(classCount.size(), 0);
+				int leftDataSize = 0;
+				int rightDataSize = 0;
+				for (int dataPos : dataIdx) {
+					if (dataset.featuresMatrix[dataPos][split.featureIdx] < split.splitVal) {
+						++leftDataSize;
+						++leftClassCount[dataset.goals[dataPos]];
+						dataIdxLeft.push_back(dataPos);
+					}
+					else {
+						++rightDataSize;
+						++rightClassCount[dataset.goals[dataPos]];
+						dataIdxRight.push_back(dataPos);
+					}
+				}
+
+				TDecisionTreeNode node;
+				node.objectCount = dataIdx.size();
+				node.featureIndex = split.featureIdx;
+				node.threshold = split.splitVal;
+				node.splitMetricValue = split.splitMetricVal;
+				tree.push_back(node);
+				int curpos = tree.size() - 1;
+				tree[curpos].leftChildIndex = tree.size();
+
+				s_dataIdx.push(dataIdxRight);
+				s_classCount.push(rightClassCount);
+				s_parentIdx.push(curpos);
+				s_depth.push(++cur_depth);
+				dataIdx = dataIdxLeft;
+				classCount = leftClassCount;
+			}
+		} while (true);
+	}
+
+
 };
