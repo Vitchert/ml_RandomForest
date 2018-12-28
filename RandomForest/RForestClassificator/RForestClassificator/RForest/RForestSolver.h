@@ -5,6 +5,7 @@
 #include <mutex>
 #include <condition_variable>
 #include <chrono> 
+#include <string> 
 
 class TRForestSolver {
 private:
@@ -85,12 +86,16 @@ public:
 		if (config.OOB) {
 			int cl;
 			int wrong = 0;
+			int testsize = 0;
 			for (size_t idx : testIdx) {
 				cl = dTree.Prediction<double>(dataset.featuresMatrix[idx]);
 				if (cl != dataset.goals[idx])
 					++wrong;
+				++testsize;
 			}
-			std::cout << "t" + std::to_string(num) + " OOB " + std::to_string((double)wrong / testIdx.size()) + "\n";
+			std::string log = "t" + std::to_string(num) + " OOBacc " + std::to_string((testIdx.size() -(double)wrong) / testIdx.size()) + "\n";
+			 log += "correct=" + std::to_string(testIdx.size() - wrong) + " wrong=" + std::to_string(wrong) + "\n";
+			 std::cout << log;
 		}
 		sem.lock();
 		++semCount;

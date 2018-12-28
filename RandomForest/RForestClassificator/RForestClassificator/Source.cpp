@@ -35,13 +35,13 @@ int main(int argc, const char** argv) {
 	else if (config.mode == "cv") {
 		TInstance instance;
 		TDataset::TCVIterator iterator = dataset.CrossValidationIterator(config.folds);
-		double SSEmean = 0;
+		double ACCmean = 0;
 		int prediction;
 		for (int i = 0; i < config.rounds; ++i) {
 			std::cout << "CV round " << i << std::endl;
 
 			iterator.ResetShuffle();
-			double SSE = 0;
+			double roundACC = 0;
 			int testsize = 1;
 			for (int j = 0; j < config.folds; ++j) {
 				iterator.SetLearnMode();
@@ -56,30 +56,32 @@ int main(int argc, const char** argv) {
 				TRForestModel model = solver.Solve(config);
 				iterator.SetTestMode();
 
-				double summ = 0;
+				double wrongPredCnt = 0;
 				int predictionsize = 0;
 				while (iterator.IsValid()) {
 					instance = *iterator;
-					prediction = model.Prediction(instance.Features);
+					prediction = model.Prediction(instance.Features,true);
 					if (prediction != instance.Goal)
-						summ++;
+						wrongPredCnt++;
 					++iterator;
 					++predictionsize;
 				}
+				double foldACC = 0;
 				if (predictionsize)
-					summ /= predictionsize;
-				if (summ != 0) {
-					SSE += (summ - SSE) / (testsize++);
+					foldACC = (predictionsize - wrongPredCnt) / predictionsize;
+				if (foldACC != 0) {
+					roundACC += (foldACC - roundACC) / (testsize++);
 				}
-				else {
-					std::cout << "j " << j << " s " << summ << std::endl;
+				else {					
 					testsize++;
 				}
+				std::cout << "fold " << j << " acc= " << foldACC << std::endl;
+				std::cout << "correct " << predictionsize - (int)wrongPredCnt << " wrong " << (int)wrongPredCnt << std::endl;
 			}
-			std::cout << "CV round " << i <<" accuracy: " << SSE << std::endl;
-			SSEmean += (SSE - SSEmean) / (i + 1);
+			std::cout << "CV round " << i <<" accuracy: " << roundACC << std::endl;
+			ACCmean += (roundACC - ACCmean) / (i + 1);
 		}
-		std::cout << std::endl << "Mean accuracy: " << SSEmean << std::endl;
+		std::cout << std::endl << "Mean accuracy: " << ACCmean << std::endl;
 	}
 	return 0;
 }
