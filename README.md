@@ -120,4 +120,4 @@ Launch example:
 ```bash
  python .\visualizer.py --model_path=".\model.txt" --limit=10
 ````
-*parameter limit specifies depth of visualisation, if use see blank graph, try decreasing it.
+*parameter `limit` specifies depth of visualisation, if you see blank graph, try decreasing it.
